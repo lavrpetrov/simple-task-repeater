@@ -3,7 +3,7 @@ from functools import wraps
 
 from dateparser import parse as parse_date
 
-from calmlib import get_current_date, get_current_datetime, to_date
+from calmlib import get_current_date, get_current_datetime, to_date, trim
 from .base import Task
 from .str_database import STRDatabase
 from .telegram_bot import TelegramBot, command, catch_errors
@@ -18,7 +18,7 @@ class STRApp(TelegramBot):
         super().__init__(*args, **kwargs)
         self.db = db
         self._actualize_tasks()
-        self._last_actualize_timestamp = get_current_datetime()
+        self._last_actualize_date = get_current_date()
 
     @staticmethod
     def _tokenize_message(message):
@@ -148,7 +148,8 @@ class STRApp(TelegramBot):
         Get tasks for particular date.
 
         """
-        if message:
+        message = trim(message, '/list')
+        if message.strip():
             date = parse_date(message)
         else:
             date = get_current_datetime()
@@ -188,9 +189,9 @@ class STRApp(TelegramBot):
             super().run()
 
     def actualize_tasks(self):
-        if self._last_actualize_timestamp < get_current_date():
+        if self._last_actualize_date < get_current_date():
             self._actualize_tasks()
-            self._last_actualize_timestamp = get_current_datetime()
+            self._last_actualize_date = get_current_date()
 
     def _actualize_tasks(self):
         """

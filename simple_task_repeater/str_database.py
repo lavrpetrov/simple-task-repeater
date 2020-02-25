@@ -51,7 +51,7 @@ class STRDatabase(Database):
         return self.data['removed_users']
 
     def has_task(self, user, shortcut):
-        return self.has_user(user) and shortcut in self.get_users_tasks(user)
+        return self.has_user(user) and shortcut in self._users_tasks[user]
 
     @synced
     def add_task(self, task: Task):

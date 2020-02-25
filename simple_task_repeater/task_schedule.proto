@@ -1,7 +1,0 @@
-syntax = "proto2";
-
-message TTaskSchedule {
-    optional string Uid = 1;
-
-    optional string period = 3; // todo:
-}

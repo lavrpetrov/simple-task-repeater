@@ -23,7 +23,8 @@ class STRApp(TelegramBot):
     @staticmethod
     def _tokenize_message(message):
         result = {}
-        result['shortcut'], message = message.split(maxsplit=1)
+        # cut off command code and get shortcut.
+        _, result['shortcut'], message = message.split(maxsplit=2)
         parts = message.split(':')
         key = "text"
         for part in parts[:-1]:

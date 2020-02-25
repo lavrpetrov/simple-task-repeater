@@ -24,7 +24,12 @@ class STRApp(TelegramBot):
     def _tokenize_message(message):
         result = {}
         # cut off command code and get shortcut.
-        _, result['shortcut'], message = message.split(maxsplit=2)
+        parts = message.split(maxsplit=2)
+        if len(parts) == 1:
+            raise ValueError("No task shortcut provided")
+        elif len(parts) == 2:
+            return {'shortcut': parts[1]}
+        _, result['shortcut'], message = parts
         parts = message.split(':')
         key = "text"
         for part in parts[:-1]:

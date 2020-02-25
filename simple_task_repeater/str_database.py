@@ -20,7 +20,7 @@ class STRDatabase(Database):
     def get_users_tasks(self, user):
         if not self.has_user(user):
             raise ValueError(f"No user {user}")
-        return [Task.from_json(task) for task in self._users_tasks[user]]
+        return [Task.from_json(task) for task in self._users_tasks[user].values()]
 
     def has_user(self, user):
         return user in self._users_tasks

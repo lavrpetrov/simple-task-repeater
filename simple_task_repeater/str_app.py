@@ -113,13 +113,19 @@ class STRApp(TelegramBot):
     @command
     @catch_errors
     def start(self, user, message):
-        self.db.add_user(user)
+        try:
+            self.db.add_user(user)
+        except ValueError:
+            return f"User {user} already active"
         return f"Added user {user} successfully"
 
     @command
     @catch_errors
     def stop(self, user, message):
-        self.db.remove_user(user)
+        try:
+            self.db.remove_user(user)
+        except ValueError:
+            return f"No user {user}"
         return f"Removed user {user} successfully"
 
     @command

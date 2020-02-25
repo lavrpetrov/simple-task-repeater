@@ -160,7 +160,9 @@ class STRApp(TelegramBot):
         # need to cast into date because date is datetime with hours etc.
         tasks = [task for task in tasks if to_date(task.date) == to_date(date)]
 
-        return "\n".join(map(repr, tasks))
+        response = date.strftime("Tasks for %a, %d %b\n")
+        response += "\n".join([task.text for task in tasks])
+        return response
 
     @command
     def complete(self, user, message):

@@ -13,9 +13,33 @@ def error_handler(update, context):
     logger.error('Update "%s" caused error "%s"', update, context.error)
 
 
-def command(func):
-    func.is_command = None
+def command_register(func):
+    """
+
+    :param func:
+    :return:
+    """
+    func.command_register = None
     return func
+
+
+def command_wrap(func):
+    """
+    Pass user and message to func instead of update and context
+    :param func:
+    :return:
+    """
+    func.command_wrap = None
+    return func
+
+
+def command(func):
+    """
+    Combines
+    :param func:
+    :return:
+    """
+    return command_register(command_wrap(func))
 
 
 class TelegramBotMeta(type):
@@ -36,8 +60,9 @@ class TelegramBotMeta(type):
 
         commands = []
         for key, value in dct.items():
-            if hasattr(value, 'is_command'):
+            if hasattr(value, 'command_wrap'):
                 dct[key] = command(value)
+            if hasattr(value, 'command_register'):
                 commands.append(value.__name__)
         dct['commands'] = commands
         return super(TelegramBotMeta, meta).__new__(meta, name, bases, dct)

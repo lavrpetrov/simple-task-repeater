@@ -47,13 +47,13 @@ class TelegramBotMeta(type):
         def command(func):
             @wraps(func)
             def wrapper(self, update, context):
-                user = update.effective_user.name
+                user_name = update.effective_user.name
                 message = update.effective_message.text
-                logger.info(f"Received message, user: {user}, message: {message}")
+                logger.info(f"Received message, user: {user_name}, message: {message}")
 
-                response = func(self, user=user, message=message)
+                response = func(self, user_name, message=message)
                 update.message.reply_text(response)
-                logger.info(f"Sent response to user {user}, message: {response}")
+                logger.info(f"Sent response to user {user_name}, message: {response}")
                 # todo: add switch - don't send debug messages to user?
 
             return wrapper

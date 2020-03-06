@@ -199,7 +199,7 @@ class STRApp(TelegramBot):
         """
         Go over all tasks and update date/reschedule
         """
-        for user in self.db.users:
+        for user in self.db.user_names:
             for task in self.db.get_users_tasks(user):
                 today = get_current_datetime()
                 if to_date(task.date) < to_date(today):

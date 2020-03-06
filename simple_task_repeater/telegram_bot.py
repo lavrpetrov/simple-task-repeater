@@ -1,16 +1,11 @@
 import traceback
 from functools import wraps
 
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 from calmlib import get_personal_logger
 
 logger = get_personal_logger(__name__)
-
-
-def error_handler(update, context):
-    """Log Errors caused by Updates."""
-    logger.error('Update "%s" caused error "%s"', update, context.error)
 
 
 def command_register(func):
@@ -78,12 +73,28 @@ class TelegramBot(metaclass=TelegramBotMeta):
         for command in self.commands:
             dp.add_handler(CommandHandler(command, getattr(self, command)))
 
+        dp.add_handler(MessageHandler(Filters.text, self.message_handler))
+
         # log all errors
-        dp.add_error_handler(error_handler)
+        dp.add_error_handler(self.error_handler)
 
     def run(self):
         self.updater.start_polling()
         self.updater.idle()
+
+    @command_wrap
+    def message_handler(self, user_name, message):
+        """Echo the user message."""
+
+        reply = ""
+        reply += f"Hey {user_name}!\n"
+        reply += f"{message} to you too!\n"
+        reply += f"Use \\help commmand to get more info!\n"
+        return reply
+
+    def error_handler(self, update, context):
+        """Log Errors caused by Updates."""
+        logger.error('Update "%s" caused error "%s"', update, context.error)
 
 
 def catch_errors(func):

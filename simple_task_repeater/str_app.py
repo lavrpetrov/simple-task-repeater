@@ -1,4 +1,5 @@
 import datetime
+from collections import Counter
 from functools import wraps
 
 from dateparser import parse as parse_date
@@ -60,9 +61,16 @@ class STRApp(TelegramBot):
         #  discard large-period tasks.
         return DEFAULT_PERIOD
 
-    def _determine_suitable_date(self, user):
-        # todo: find the nearest date with < task_per_day_limit (3) tasks.
-        return get_current_datetime()
+    def _determine_suitable_date(self, user_name):
+        tasks = self.db.get_users_tasks(user_name)
+        tasks_dates = Counter([task.date.date() for task in tasks])
+        # find_date
+        task_date = get_current_datetime()
+        td = datetime.timedelta(days=1)
+        while tasks_dates[task_date.date()] >= TASK_PER_DAY_LIMIT:
+            task_date += td
+            # this naturally stops because each task register only once.
+        return task_date
 
     def parse_message(self, user, message):
         return self._parse_task(user, STRApp._tokenize_message(message))

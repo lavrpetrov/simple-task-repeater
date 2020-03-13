@@ -14,6 +14,7 @@ TASK_PER_DAY_LIMIT = 3
 
 
 class STRApp(TelegramBot):
+    # todo: rewrite all commands, add decorator that parses message and passes it to the command as kwargs.
     @wraps(TelegramBot.__init__)
     def __init__(self, db: STRDatabase, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -174,6 +175,12 @@ class STRApp(TelegramBot):
 
     @command
     def complete(self, user, message):
+        """
+        Register that you've completed a task
+        :param user:
+        :param message:
+        :return:
+        """
         task = self.parse_message(user, message)
         if 'date' in task:
             date = parse_date(task['date'])
@@ -183,16 +190,21 @@ class STRApp(TelegramBot):
         task.completions.append(date)
         task.date = date + datetime.timedelta(days=task.period)
         self.db.update_task(task)
-        raise NotImplemented
 
     @command
     def help(self, user, message):
         """
         Return commands and shortened docstrings.
         """
+        reply = ""
         # todo: add docstrings - instead of help message for each command.
         # todo: how to make telegram list all possible commands?
-        return '\n'.join([command.__name__ for command in self.commands])
+        reply += "Commands: \n"
+        reply += '\n  '.join([command.__name__ for command in self.commands])
+
+        reply += "Task fields: \n"
+        reply += '\n  '.join(Task.declared_fields.keys())
+        return reply
 
     def run(self):
         with self.db:

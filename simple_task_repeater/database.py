@@ -1,4 +1,3 @@
-import os
 import time
 from pathlib import Path
 from threading import RLock
@@ -43,7 +42,7 @@ class Database(metaclass=DatabaseMeta):
             self._sync()
 
     def load_data(self):
-        if os.path.exists(self.data_path):
+        if self.data_path.exists():
             return load_json(self.data_path)
         else:
             return {}
@@ -52,7 +51,7 @@ class Database(metaclass=DatabaseMeta):
         dump_json(self.data, self.data_path)
 
     @autocast_args
-    def __init__(self, path: Path, dropbox_token, dropbox_subpath=None, sync_period=None):
+    def __init__(self, path: Path, dropbox_token, dropbox_subpath, sync_period=None, offline_mode=False):
         self.sync_period = sync_period or DEFAULT_SYNC_PERIOD
         timestamp = time.time()
         self._last_sync_timestamp = timestamp
@@ -60,9 +59,11 @@ class Database(metaclass=DatabaseMeta):
         self._lock = RLock()
         self._syncer_thread = None
         self._syncer_flag = True
+        self.offline_mode = offline_mode
         self.dropbox_syncer = DropboxSharedFolder(token=dropbox_token, path=path,
-                                                  subpath=dropbox_subpath or self.__class__.__name__)
-        self.dropbox_syncer.sync()
+                                                  subpath=dropbox_subpath)
+        if not self.offline_mode:
+            self.dropbox_syncer.sync()  # need to bypass self.sync because it dumps data and we need to load first
         self.data_path = path / 'data.json'
         self.data = self.load_data()
         logger.info(f"Initializing Database at {path.absolute()}")
@@ -79,8 +80,9 @@ class Database(metaclass=DatabaseMeta):
     def _sync(self):
         # dump all data on disk.
         self.dump_data()
-        # call dropbox sync
-        self.dropbox_syncer.sync()
+        if not self.offline_mode:
+            # call dropbox sync
+            self.dropbox_syncer.sync()
 
     def _syncer(self):
         while self.syncer_flag:

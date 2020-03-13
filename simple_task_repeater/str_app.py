@@ -210,9 +210,10 @@ class STRApp(TelegramBot):
         for user in self.db.user_names:
             for task in self.db.get_users_tasks(user):
                 today = get_current_datetime()
-                if to_date(task.date) < to_date(today):
+                while to_date(task.date) < to_date(today):
                     if task.reschedule:
                         # if task is past due and to be rescheduled - reschedule it on today
                         task.date = today
                     else:
                         task.date += datetime.timedelta(days=task.period)
+                self.db.update_task(task)

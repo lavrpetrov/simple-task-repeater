@@ -1,6 +1,7 @@
 import datetime
 from collections import Counter
 from functools import wraps
+from time import sleep
 
 from dateparser import parse as parse_date
 
@@ -12,7 +13,6 @@ from .telegram_bot import TelegramBot, command, catch_errors
 DEFAULT_PERIOD = 4
 TASK_PER_DAY_LIMIT = 3
 
-
 class STRApp(TelegramBot):
     # todo: rewrite all commands, add decorator that parses message and passes it to the command as kwargs.
     @wraps(TelegramBot.__init__)
@@ -21,6 +21,7 @@ class STRApp(TelegramBot):
         self.db = db
         self._actualize_tasks()
         self._last_actualize_date = get_current_date()
+        self._just_launched = False
 
     @staticmethod
     def _tokenize_message(message):
@@ -61,6 +62,7 @@ class STRApp(TelegramBot):
         # todo: count current tasks and estimate period necessary to stay below task_per_day_limit
         #  discard large-period tasks.
         return DEFAULT_PERIOD
+    # todo: shake up periods/max task count so that there's some space
 
     def _determine_suitable_date(self, user_name):
         tasks = self.db.get_users_tasks(user_name)
@@ -208,7 +210,43 @@ class STRApp(TelegramBot):
 
     def run(self):
         with self.db:
-            super().run()
+            self.updater.start_polling()
+            # event loop
+            self.event_loop()
+
+    def send_out_updates(self):
+        # check schedule.
+        n = datetime.datetime.now()
+        for user_name in self.db.user_names:
+            if user_name.lower() not in {"@msuorange"}:
+                continue  # todo: change when added User class. kostyl for now
+            h, m, s = 7, 0, 0
+            if n.hour == h and n.minute == m and (n.second == s or (n.second == s + 1 and not self._just_launched)):
+                print("Hooray! Time matches")
+                # send update to user. how? oh i need that fucken shit... chat id etc. Oh. hate it...
+                # done: find chat id and how to send a message
+                # 291560340
+                # todo 2: compose a message. I need to do it manually for now.
+                today_plan = ""
+                tasks = self.db.get_users_tasks(user_name)
+
+                date = get_current_date()
+                # need to cast into date because date is datetime with hours etc.
+                tasks = [task for task in tasks if to_date(task.date) == to_date(date)]
+
+                response = date.strftime("Tasks for %a, %d %b\n")
+                response += "\n [] ".join([task.text for task in tasks])
+                self.dp
+                # todo: after i wrap all command in constructor instead of metacalss - i can use native methods
+                # Done: test that schedule works as designed
+                self._just_launched = True
+            else:
+                self._just_launched = False
+
+    def event_loop(self):
+        while True:
+            self.send_out_updates()
+            sleep(1)
 
     def actualize_tasks(self):
         if self._last_actualize_date < get_current_date():

@@ -13,3 +13,4 @@ setup(name='SimpleTaskRepeater',
       long_description=Path('README.md').read_text(),
       install_requires=Path('requirements.txt').read_text().split()
       )
+#First try

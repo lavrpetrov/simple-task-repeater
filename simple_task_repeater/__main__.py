@@ -16,13 +16,17 @@ logger = get_personal_logger(__name__)
 
 def create_app(db_path: Path = DEFAULT_DB_PATH, dropbox_token_path: Path = DEFAULT_DROPBOX_TOKEN_PATH,
                telegram_token_path: Path = DEFAULT_TELEGRAM_TOKEN_PATH,
+               enable_proxy: bool = False,
                nordvpn_secret_path: Path = DEFAULT_NORDVPN_SECRET_PATH,
                nordvpn_server=DEFAULT_NORDVPN_SERVER, dropbox_subpath=None, offline_mode=False):
     dropbox_token = get_token(dropbox_token_path)
     telegram_token = get_token(telegram_token_path)
 
-    proxy_credentials = load_json(nordvpn_secret_path)
-    proxy_url = f'http://{proxy_credentials["user"]}:{proxy_credentials["password"]}@{nordvpn_server}/'
+    if enable_proxy:
+        proxy_credentials = load_json(nordvpn_secret_path)
+        proxy_url = f'http://{proxy_credentials["user"]}:{proxy_credentials["password"]}@{nordvpn_server}/'
+    else:
+        proxy_url = None
     # dropbox_folder_name # default None
 
     logger.info("Creating STR database")
@@ -38,10 +42,11 @@ def create_app(db_path: Path = DEFAULT_DB_PATH, dropbox_token_path: Path = DEFAU
 @autocast_args
 def main(db_path: Path = DEFAULT_DB_PATH, dropbox_token_path: Path = DEFAULT_DROPBOX_TOKEN_PATH,
          telegram_token_path: Path = DEFAULT_TELEGRAM_TOKEN_PATH,
+         enable_proxy: bool = False,
          nordvpn_secret_path: Path = DEFAULT_NORDVPN_SECRET_PATH,
          nordvpn_server=DEFAULT_NORDVPN_SERVER, dropbox_subpath=None, offline_mode=False):
     logger.info("Launching simple task repeater")
-    app = create_app(db_path, dropbox_token_path, telegram_token_path, nordvpn_secret_path, nordvpn_server,
+    app = create_app(db_path, dropbox_token_path, telegram_token_path, enable_proxy, nordvpn_secret_path, nordvpn_server,
                      dropbox_subpath, offline_mode=offline_mode)
 
     logger.info("Launching the app")
@@ -55,7 +60,8 @@ if __name__ == '__main__':
     parser.add_argument("--db-path", default=DEFAULT_DB_PATH)
     parser.add_argument("--dropbox-token-path",
                         default=DEFAULT_DROPBOX_TOKEN_PATH)
-    parser.add_argument("--dropbox-subpath", default=None)
+    parser.add_argument("--dropbox-subpath", default="STRDatabase")
+    parser.add_argument("--enable-proxy", action='store_true')
     parser.add_argument("--telegram-token-path",
                         default=DEFAULT_TELEGRAM_TOKEN_PATH)
     parser.add_argument("--nordvpn-secret-path",
